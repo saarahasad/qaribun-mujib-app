@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Qaribun Mujib">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
@@ -439,7 +439,7 @@ body.hide-en .dua-card:not(.reveal) .dua-en, body.hide-ar .dua-card:not(.reveal)
       <img src="icons/icon-192.png" alt="">
       <div style="flex:1;min-width:0">
         <div class="t">Add to your home screen</div>
-        <div class="m" id="installMsg">Open it like an app — works offline too.</div>
+        <div class="m" id="installMsg">Add it to your home screen. It opens full screen and works offline.</div>
       </div>
       <button class="btn" id="installBtn">Install</button>
     </div>
@@ -7361,13 +7361,19 @@ addEventListener('hashchange', route);
 let deferred = null;
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /android/i.test(navigator.userAgent);
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if (!standalone) $('#installCard').classList.add('show'); });
+if (!standalone && (isIOS || isAndroid)) $('#installCard').classList.add('show');
 if (isIOS && !standalone) {
-  $('#installCard').classList.add('show');
-  $('#installMsg').innerHTML = 'In Safari, tap <b>Share</b> then <b>Add to Home Screen</b>.';
+  $('#installMsg').innerHTML = 'Tap <b>Share</b>, then <b>Add to Home Screen</b>. It opens like an app.';
   $('#installBtn').style.display = 'none';
+} else if (isAndroid && !standalone) {
+  $('#installMsg').innerHTML = 'Tap <b>Install</b>. Or open the browser menu and choose <b>Install app</b> or <b>Add to Home screen</b>.';
 }
-$('#installBtn').onclick = async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $('#installCard').classList.remove('show'); };
+$('#installBtn').onclick = async () => {
+  if (!deferred) { toast('Open the browser menu and choose Install app'); return; }
+  deferred.prompt(); await deferred.userChoice; deferred = null; $('#installCard').classList.remove('show');
+};
 addEventListener('appinstalled', () => { $('#installCard').classList.remove('show'); toast('Installed — find it on your home screen'); });
 
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
